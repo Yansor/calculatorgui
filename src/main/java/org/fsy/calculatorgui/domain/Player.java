@@ -45,7 +45,7 @@ public class Player {
 
           float winBase = (win ? 1f - (chouRate / 100) : -1f  );
 
-          return name.getText() +"赢" +  (winBase  * Float.valueOf(money.getText()) * Float.valueOf(rate.getText()));
+          return name.getText() +" 余:" +  (winBase  * Float.valueOf(money.getText()) * Float.valueOf(rate.getText()));
      }
 
 }

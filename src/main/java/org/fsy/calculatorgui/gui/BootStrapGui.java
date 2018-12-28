@@ -4,6 +4,7 @@ import org.fsy.calculatorgui.StringUtils;
 import org.fsy.calculatorgui.domain.Banker;
 import org.fsy.calculatorgui.domain.Player;
 import org.fsy.calculatorgui.utils.ClipBoardUtil;
+import org.fsy.calculatorgui.utils.CollectionUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -41,23 +42,22 @@ public final class BootStrapGui extends JFrame {
 
     JPanel gridPanel = new JPanel();
 
+    private JTextField zhuangYuE = new JTextField(null , "0" , 8);
+
     public BootStrapGui(){
         //设置主题
 
-//        try {
-//            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-//        } catch (ClassNotFoundException e) {
-//            e.printStackTrace();
-//        } catch (InstantiationException e) {
-//            e.printStackTrace();
-//        } catch (IllegalAccessException e) {
-//            e.printStackTrace();
-//        } catch (UnsupportedLookAndFeelException e) {
-//            e.printStackTrace();
-//        }
-
-
-
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (UnsupportedLookAndFeelException e) {
+            e.printStackTrace();
+        }
 
         //标题
         setTitle("庄家返佣_计算工具_V1版");
@@ -154,54 +154,69 @@ public final class BootStrapGui extends JFrame {
         //3
         JButton callButton = new JButton("计算输赢结果");
         callButton.addActionListener((ActionEvent->{
-            //添加抽水率
-            playerList.stream().skip(1)
-                    .filter((Player player)->{
-                        //必填字段校验
-                        return StringUtils.isNotEmpty(player.getMoney().getText())
-                                && StringUtils.isNotEmpty(player.getRate().getText())
-                                && StringUtils.isNotEmpty(player.getName().getText());
-                    })
-                    .forEach(
-                            (Player player)->{
-                                player.setChouRate(Float.valueOf(zhuangCombo.getSelectedItem().toString()));
-                            }
-                    );
+            //庄家
+            Banker.zhuangWinMoney = 0;
+            if(CollectionUtils.isNotEmpty(playerList)){
+                //添加抽水率
+                playerList.stream().skip(1)
+                        .filter((Player player)->{
+                            //必填字段校验
+                            return StringUtils.isNotEmpty(player.getMoney().getText())
+                                    && StringUtils.isNotEmpty(player.getRate().getText())
+                                    && StringUtils.isNotEmpty(player.getName().getText());
+                        })
+                        .forEach(
+                                (Player player)->{
+                                    player.setChouRate(Float.valueOf(zhuangCombo.getSelectedItem().toString()));
+                                }
+                        );
 
-            //
-            final Float[] sumBet = {0f}; //TODO why define here so style
-            playerList.stream()
-                    .peek((Player player)->{
-                        if(player.getRate().getText().equals("庄家")){
-                            Banker.name = player.getName().getText();
-                        }
-                    })
-                    .skip(1)
-                    .filter((Player player)->{
-                        //必填字段校验
-                        return StringUtils.isNotEmpty(player.getMoney().getText())
-                                && StringUtils.isNotEmpty(player.getRate().getText())
-                                && StringUtils.isNotEmpty(player.getName().getText());
-                    })//跳过庄　
-                    .forEach(
-                            (Player player)->{
-                                sumBet[0] = sumBet[0] +  Float.valueOf(player.getMoney().getText());
-                                result = new StringBuffer(player.toString() + "\n");
-                                System.out.println(player.toString());
-                                player.doChouRate();
+                //
+                final Float[] sumBet = {0f}; //TODO why define here so style
+                playerList.stream()
+                        .peek((Player player)->{
+                            if(player.getRate().getText().equals("庄家")){
+                                Banker.name = player.getName().getText();
+                            }
+                        })
+                        .skip(1)
+                        .filter((Player player)->{
+                            //必填字段校验
+                            return StringUtils.isNotEmpty(player.getMoney().getText())
+                                    && StringUtils.isNotEmpty(player.getRate().getText())
+                                    && StringUtils.isNotEmpty(player.getName().getText());
+                        })//跳过庄　
+                        .forEach(
+                                (Player player)->{
+                                    sumBet[0] = sumBet[0] +  Float.valueOf(player.getMoney().getText());
+                                    result = new StringBuffer();
+                                    System.out.println("当前数据如下:\n\n");
+                                    result.append("当前数据如下:\n\n");
+
+                                    result.append(player.toString() + "\n");
+                                    System.out.println(player.toString() + "\n");
+                                    player.doChouRate();
 //                        System.out.println("庄家赢"+Player.zhuangWinMoney);
-                            }
-                    );
+                                }
+                        );
 
-            result.append("庄家"+Banker.name + "赢"+ Banker.zhuangWinMoney+"\n");
-            System.out.println("庄家"+Banker.name + "赢"+ Banker.zhuangWinMoney);
+                result.append(Banker.name + "　庄额: "+ Banker.zhuangWinMoney+"\n\n");
+                System.out.println(Banker.name + "　庄额: "+ Banker.zhuangWinMoney+"\n\n");
 
-            //设置总抽水
-            float zongChouValueCache = Float.valueOf(zongChouValue.getText()) + (sumBet[0] / 100  * Float.valueOf(zhuangCombo.getSelectedItem().toString()) );
+                result.append("祝各位老板玩的开心! ~");
+                System.out.println("祝各位老板玩的开心! ~");
 
-            zongChouValue.setText( zongChouValueCache == 0f  ? "" : zongChouValueCache+"");
+                //设置总抽水
+                float zongChouValueCache = Float.valueOf(zongChouValue.getText()) + (sumBet[0] / 100  * Float.valueOf(zhuangCombo.getSelectedItem().toString()) );
 
+                zongChouValue.setText( zongChouValueCache == 0f  ? "" : zongChouValueCache+"");
 
+                //当前庄余额计算
+                Banker.zhuangCurrentYuE+=Banker.zhuangWinMoney;
+
+                Float zhuangYueF = Float.valueOf(zhuangYuE.getText()) + Banker.zhuangWinMoney;
+                zhuangYuE.setText( zhuangYueF == 0 ? "0" :zhuangYueF+"");
+            }
         }));
 
         bottomBox.add(callButton);
@@ -232,13 +247,23 @@ public final class BootStrapGui extends JFrame {
                         }
                     });
            ;
+            //庄余额
+//            Float zhuangYueF = Float.valueOf(zhuangYuE.getText()) + Banker.historyWinMoney;
+            zhuangYuE.setText( "0");
 
+            //
+            playerList.clear();
         });
 
         JButton reback = new JButton("点击错误返回");
         reback.addActionListener((ActionEvent actionEvent)->{
             //清理
             Banker.zhuangWinMoney = Banker.historyWinMoney;
+            //清理总抽
+            zongChouValue.setText("0");
+            //庄余额
+            Float zhuangYueF = Float.valueOf(zhuangYuE.getText()) + Banker.historyWinMoney;
+            zhuangYuE.setText( zhuangYueF == 0 ? "0" :zhuangYueF+"");
         });
 
         bottomBox.add(copy);
@@ -249,15 +274,11 @@ public final class BootStrapGui extends JFrame {
     private void createChouPanel() {
         JLabel chouDianConfig = new JLabel("抽点设置 : ");
 
-
-
         createZhungChouBox();
 
         createXianBox();
 
         createZongBox();
-
-
 
         Box rightBox = Box.createVerticalBox();
         rightBox.add(zhuangBox);
@@ -269,19 +290,22 @@ public final class BootStrapGui extends JFrame {
 
 
         chouPanel.setLayout(new FlowLayout());
+        //庄现有余额
+
+        JLabel zhuangYuLabel = new JLabel("庄余额:");
+        Box zhuangBox = Box.createHorizontalBox();
+        zhuangBox.add(zhuangYuLabel);
+        zhuangBox.add(zhuangYuE);
+
+        chouPanel.add(zhuangBox);
         chouPanel.add(leftBox);
         chouPanel.add(rightBox);
     }
 
     private void createZongBox() {
-
         JLabel zongChou = new JLabel("总抽水:");
-
-
-
         zongBox.add(zongChou);
         zongBox.add(zongChouValue);
-
     }
 
     private void createXianBox() {

@@ -13,4 +13,8 @@ public class Banker {
     public static float zhuangWinMoney;
 
     public static String name ;
+
+    public static  float zhuangYuE = 0f; //开始游戏时候,庄余额　
+
+    public static  float zhuangCurrentYuE = 0f; //当前游戏时刻,庄余额
 }
